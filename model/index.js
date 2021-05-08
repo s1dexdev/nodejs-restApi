@@ -1,6 +1,6 @@
 const fs = require('fs/promises');
 const { join } = require('path');
-const shortid = require('shortid');
+const { v4: uuidv4 } = require('uuid');
 
 const contactsFile = join(__dirname, './contacts.json');
 
@@ -59,10 +59,11 @@ const addContact = async body => {
     const data = await fs.readFile(contactsFile, { encoding: 'utf8' });
     const parsedData = await JSON.parse(data);
 
-    body.id = shortid.generate();
+    body.id = uuidv4();
     const сontactList = [...parsedData, body];
 
     await fs.writeFile(contactsFile, JSON.stringify(сontactList, null, 2));
+    return body;
   } catch (error) {
     console.log(error);
   }
@@ -72,14 +73,11 @@ const updateContact = async (contactId, body) => {
   try {
     const data = await fs.readFile(contactsFile, { encoding: 'utf8' });
     const parsedData = await JSON.parse(data);
-    const response = {};
+    let response = false;
 
     const checkContact = parsedData.find(({ id }) => id === contactId);
 
     if (!checkContact) {
-      response.statusCode = 404;
-      response.result = { message: 'Not found' };
-
       return response;
     }
 
@@ -88,8 +86,7 @@ const updateContact = async (contactId, body) => {
         const newContact = Object.assign({}, contact, body);
 
         acc.push(newContact);
-        response.statusCode = 200;
-        response.result = newContact;
+        response = newContact;
 
         return acc;
       } else {
