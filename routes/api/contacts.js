@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { schemaPost, schemaPatch } = require('../../model/validation_schema');
+const {
+  validateCreateContact,
+  validateUpdateContact,
+} = require('./validation_schema');
 const {
   listContacts,
   getContactById,
@@ -11,9 +14,9 @@ const {
 
 router.get('/', async (req, res, next) => {
   try {
-    const data = await listContacts();
+    const contacts = await listContacts();
 
-    res.json(data);
+    return res.json({ status: 'success', code: 200, data: { contacts } });
   } catch (error) {
     next(error);
   }
@@ -22,28 +25,28 @@ router.get('/', async (req, res, next) => {
 router.get('/:contactId', async (req, res, next) => {
   try {
     const { contactId } = req.params;
-    const data = await getContactById(contactId);
+    const contact = await getContactById(contactId);
 
-    if (!data) {
-      res.status(404).json({ message: 'Not found' });
-    } else {
-      res.json(data);
+    if (!contact) {
+      return res
+        .status(404)
+        .json({ status: 'error', code: 404, message: 'Not found' });
     }
+
+    return res.json({ status: 'success', code: 200, data: { contact } });
   } catch (error) {
     next(error);
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', validateCreateContact, async (req, res, next) => {
   try {
-    const data = await schemaPost.validateAsync(req.body);
+    const contact = await addContact(req.body);
 
-    await addContact(data);
-    res.status(201).json(data);
+    return res
+      .status(201)
+      .json({ status: 'success', code: 201, data: { contact } });
   } catch (error) {
-    if (error.isJoi) {
-      error.status = 400;
-    }
     next(error);
   }
 });
@@ -54,26 +57,36 @@ router.delete('/:contactId', async (req, res, next) => {
     const result = await removeContact(contactId);
 
     if (result) {
-      res.json({ message: 'contact deleted' });
-    } else {
-      res.status(404).json({ message: 'Not found' });
+      return res.json({
+        status: 'success',
+        code: 200,
+        message: 'contact deleted',
+      });
     }
+
+    return res
+      .status(404)
+      .json({ status: 'error', code: 404, message: 'Not found' });
   } catch (error) {
     next(error);
   }
 });
 
-router.patch('/:contactId', async (req, res, next) => {
+router.patch('/:contactId', validateUpdateContact, async (req, res, next) => {
   try {
     const { contactId } = req.params;
-    const data = await schemaPatch.validateAsync(req.body);
-    const { statusCode, result } = await updateContact(contactId, data);
+    const contact = await updateContact(contactId, req.body);
 
-    res.status(statusCode).json(result);
-  } catch (error) {
-    if (error.isJoi) {
-      error.status = 400;
+    if (!contact) {
+      return res
+        .status(404)
+        .json({ status: 'error', code: 404, message: 'Not found' });
     }
+
+    return res
+      .status(200)
+      .json({ status: 'success', code: 200, data: { contact } });
+  } catch (error) {
     next(error);
   }
 });
