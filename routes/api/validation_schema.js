@@ -9,6 +9,7 @@ const schemaCreateContact = Joi.object({
   phone: Joi.string()
     .regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im)
     .required(),
+  favorite: Joi.boolean().optional(),
 });
 
 const schemaUpdateContact = Joi.object({
@@ -20,6 +21,10 @@ const schemaUpdateContact = Joi.object({
   phone: Joi.string()
     .regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im)
     .optional(),
+});
+
+const schemaStatusContact = Joi.object({
+  favorite: Joi.boolean().required(),
 });
 
 const validate = async (schema, body, next) => {
@@ -37,4 +42,8 @@ module.exports.validateCreateContact = (req, _res, next) => {
 
 module.exports.validateUpdateContact = (req, _res, next) => {
   return validate(schemaUpdateContact, req.body, next);
+};
+
+module.exports.validateStatusContact = (req, _res, next) => {
+  return validate(schemaStatusContact, req.body, next);
 };
