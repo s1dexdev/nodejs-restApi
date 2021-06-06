@@ -16,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 app.use(boolParser());
 
+app.use('/avatars', express.static(__dirname + '/public/avatars'));
 app.use('/api/users', usersRouter);
 app.use('/api/contacts', contactsRouter);
 
