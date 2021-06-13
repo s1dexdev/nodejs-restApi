@@ -8,6 +8,8 @@ const {
   validateUpdateSubscription,
 } = require('./validation_schema');
 
+router.get('/verify/:verificationToken', ctrl.verify);
+router.post('/verify', ctrl.repeatSendEmailVerify);
 router.post('/signup', validateCreateUser, ctrl.signup);
 router.post('/login', ctrl.login);
 router.post('/logout', guard, ctrl.logout);
